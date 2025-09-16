@@ -12,6 +12,7 @@ export default function AddTransactionForm() {
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]); // Default to
     // today's date
     const [amount, setAmount] = useState("");
+    const [loadingdata, setLoadingdata] = useState(false);
     const [description, setDescription] = useState("");
     async function sendData() {
         if (!amount) {
@@ -38,6 +39,7 @@ export default function AddTransactionForm() {
         console.log("Token found:", token);
 
         try {
+            setLoadingdata(true);
             const response = await axios.post(
                 "http://localhost:8080/senddata",
                 {
@@ -64,6 +66,8 @@ export default function AddTransactionForm() {
         } catch (error) {
             console.error("Error adding transaction:", error);
             alert("An error occurred while adding the transaction. Please try again.");
+        } finally {
+            setLoadingdata(false);
         }
     }
 
@@ -181,13 +185,19 @@ export default function AddTransactionForm() {
                     </div>
 
                     {/* Submit Button */}
-                    <button
-                        type="submit"
-                        onClick={sendData}
-                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-[1.02] transition-all duration-200 shadow-lg"
-                    >
-                        Add Transaction
-                    </button>
+                    {loadingdata ? (
+                        <div className="w-full bg-gray-300 text-white font-semibold py-3 px-6 rounded-xl text-center">
+                            Loading...
+                        </div>
+                    ) : (
+                        <button
+                            type="submit"
+                            onClick={sendData}
+                            className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-[1.02] transition-all duration-200 shadow-lg"
+                        >
+                            Add Transaction
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

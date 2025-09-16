@@ -1,5 +1,6 @@
 "use client"
 import axios from "axios"
+import  Link  from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -73,6 +74,9 @@ const [password, setPassword] = useState("");
                         Signup
                     </button>
                 </form>
+                <Link href={"/auth/signin"}>
+                <div className="text-black text-center py-2">Already Signed up? Login here</div>
+                </Link>
             </div>
         </div>
     )

@@ -22,11 +22,16 @@ export default function Home() {
   const whyRef = useRef(null);
   const stepsRef = useRef(null);
   const pricingRef = useRef(null);
-
+  function handlescroll() {
+    window.scrollTo({
+      top: window.innerHeight,
+      behavior: 'smooth'
+    });
+  }
   useEffect(() => {
     // Clear any existing ScrollTriggers
     ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-    
+
     // Hero section - Initial load animations (no scroll trigger)
     const heroTl = gsap.timeline();
     heroTl.from(heroRef.current.querySelectorAll(".hero-text"), {
@@ -36,12 +41,12 @@ export default function Home() {
       duration: 1.2,
       ease: "power3.out",
     })
-    .from(heroRef.current.querySelector(".hero-chart"), {
-      opacity: 0,
-      scale: 0.8,
-      duration: 0.3,
-      ease: "back.out(1.7)",
-    }, "-=0.5");
+      .from(heroRef.current.querySelector(".hero-chart"), {
+        opacity: 0,
+        scale: 0.8,
+        duration: 0.3,
+        ease: "back.out(1.7)",
+      }, "-=0.5");
 
     // Features Section - Perfect scroll with scrub
     const featureTextTl = gsap.timeline({
@@ -53,7 +58,7 @@ export default function Home() {
         toggleActions: "play none none reverse",
       }
     });
-    
+
     featureTextTl.fromTo(featureRef.current.querySelector(".feature-text"), {
       x: -120,
       opacity: 0,
@@ -97,7 +102,7 @@ export default function Home() {
         toggleActions: "play none none reverse",
       }
     });
-    
+
     featureImgTl.fromTo(featureRef.current.querySelector(".feature-img"), {
       x: 120,
       opacity: 0,
@@ -116,20 +121,21 @@ export default function Home() {
     const whyTl = gsap.timeline({
       scrollTrigger: {
         trigger: whyRef.current,
-        start: "top 70%",
-        end: "bottom 30%",
+        start: "top 60%",
+        end: "top 10%",
         scrub: 2,
+        markers: true,
         toggleActions: "play none none reverse",
       }
     });
 
-    whyTl.fromTo(whyRef.current.querySelectorAll("li"), {
-      y: 60,
+    whyTl.fromTo(whyRef.current.querySelector("#item1"), {
+      x: -120,
       opacity: 0,
       scale: 0.95,
       rotationX: 15,
     }, {
-      y: 0,
+      x: 0,
       opacity: 1,
       scale: 1,
       rotationX: 0,
@@ -137,7 +143,48 @@ export default function Home() {
       duration: 0.8,
       ease: "power3.out",
     });
-
+    whyTl.fromTo(whyRef.current.querySelector("#item2"), {
+      x: 120,
+      opacity: 0,
+      scale: 0.95,
+      rotationX: 15,
+    }, {
+      x: 0,
+      opacity: 1,
+      scale: 1,
+      rotationX: 0,
+      stagger: 0.2,
+      duration: 0.8,
+      ease: "power3.out",
+    });
+    whyTl.fromTo(whyRef.current.querySelector("#item3"), {
+      x: -120,
+      opacity: 0,
+      scale: 0.95,
+      rotationX: 15,
+    }, {
+      x: 0,
+      opacity: 1,
+      scale: 1,
+      rotationX: 0,
+      stagger: 0.2,
+      duration: 0.8,
+      ease: "power3.out",
+    });
+    whyTl.fromTo(whyRef.current.querySelector("#item4"), {
+      x: 120,
+      opacity: 0,
+      scale: 0.95,
+      rotationX: 15,
+    }, {
+      x: 0,
+      opacity: 1,
+      scale: 1,
+      rotationX: 0,
+      stagger: 0.2,
+      duration: 0.8,
+      ease: "power3.out",
+    });
     // Steps Section - Card animations with enhanced effects
     const stepsTl = gsap.timeline({
       scrollTrigger: {
@@ -194,6 +241,7 @@ export default function Home() {
 
   return (
     <>
+  
       {/* HERO */}
       <div
         ref={heroRef}
@@ -224,6 +272,7 @@ export default function Home() {
             <strong>Smart</strong>, <strong>Secure</strong>, and{" "}
             <strong>Effortless</strong> Expense Tracking
           </div>
+          <div onClick={handlescroll} className="text-black text-center border mt-5 rounded-2xl p-3 hero-text hover:bg-blue-300 cursor-pointer">Click Me</div>
         </div>
         <div style={{ height: 400 }} className="hero-chart">
           <MyPie />
@@ -285,18 +334,18 @@ export default function Home() {
         </div>
         <div className="mt-20 text-center text-3xl">
           <ul className="list-inside text-black" style={{ willChange: 'transform' }}>
-            <li className="pb-10">
+            <li id="item1" className="pb-10">
               🔒 Secure Login - <strong>Protect</strong> your data with modern
               authentication
             </li>
-            <li className="pb-10">
+            <li id="item2" className="pb-10">
               📊 Smart <strong>Analytics</strong> - Visualize your spending
               patterns instantly
             </li>
-            <li className="pb-10">
+            <li id="item3" className="pb-10">
               💡 Budget Alerts - Stay on <strong>top</strong> of your finances
             </li>
-            <li>
+            <li id="item4">
               📱 <strong>Cross-Device</strong> Access - Use on desktop, tablet,
               or mobile
             </li>

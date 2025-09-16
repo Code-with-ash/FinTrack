@@ -116,7 +116,7 @@ export default function BalanceExpenseChart() {
   if (loading) {
     return (
       <div className="bg-white p-4 rounded-xl shadow-md w-full h-full flex items-center justify-center">
-        <div>Loading chart data...</div>
+        <div className="text-black">Loading chart data...</div>
       </div>
     );
   }

@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client';
 import cors from 'cors';
 const app = express();
 const pg = new PrismaClient();
+const {JWT_SECRET } = process.env;
 app.use(express.json());
 app.use(cors());
 
@@ -36,7 +37,10 @@ app.post('/signin', async (req, res) => {
         if (user) {
             const isValid = await bcrypt.compare(password, user.password);
             if (isValid) {
-                const token = jwt.sign({ id: user.id, username: user.username }, 'secret', { expiresIn: '1h' });
+                if (!JWT_SECRET || typeof JWT_SECRET !== 'string') {
+                    return res.status(500).send('JWT secret is not configured');
+                }
+                const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '1h' });
                 console.log(user);
                 return res.json({ token : token , username: user.username });
             }
@@ -58,8 +62,11 @@ async function UserMiddleware(req: express.Request, res: express.Response, next:
     if (!token) {
         return res.status(401).send('Access denied');
     }
-    try {
-        const decoded = jwt.verify(token, 'secret');
+`try {
+        if (!JWT_SECRET || typeof JWT_SECRET !== 'string') {
+            return res.status(500).send('JWT secret is not configured');
+        }
+        const decoded = jwt.verify(token, JWT_SECRET);
         // @ts-ignore
         req.user = decoded;
         next();
@@ -187,12 +194,18 @@ try {
         pg.expense.findMany({ where: { userId, month: currentMonth } }),
         pg.expense.findMany({ where: { userId, month: prevMonth } })
     ]);
+   const transaction = await  pg.transaction.findMany({
+               where: {
+                   userId
+               }
+           })
 
     res.json({
         currentmonthbalance,
         currentmonthexpense,
         previousmonthbalance,
-        previousmonthexpense
+        previousmonthexpense ,
+        transaction
     });
 } catch (error) {
     console.error(error);

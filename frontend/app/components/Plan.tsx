@@ -1,4 +1,6 @@
 import { Check, X, Star, TrendingUp, Shield, Users } from "lucide-react";
+import Link from "next/link";
+import SignupPage from "../auth/signup/page";
 export default function PricingPage() {
     return (
         <div className="min-h-screen bg-gradient-to-l from-gray-50 via-gray-100 to-gray-200">
@@ -65,9 +67,10 @@ export default function PricingPage() {
                             </div>
                         </div>
 
-                        <button className="w-full py-3 px-6 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200">
+                        <Link href={"/auth/signup"}
+                         className="w-full text-center py-3 px-6 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 ml-20">
                             Get Started Free
-                        </button>
+                        </Link>
                     </div>
 
                     {/* Pro Plan */}

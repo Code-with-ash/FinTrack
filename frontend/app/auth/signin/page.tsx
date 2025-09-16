@@ -1,6 +1,7 @@
 "use client"
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Link from "next/link";
 import axios from "axios";
 export default function SigninPage() {
     const router = useRouter();
@@ -74,6 +75,9 @@ export default function SigninPage() {
                         Signin
                     </button>
                 </form>
+                <Link href={"/auth/signup"}>
+                <div className="text-black text-center py-2">Havent Signed up ? SignUp here</div>
+                </Link>
             </div>
         </div>
     )
