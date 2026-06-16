@@ -19,7 +19,7 @@ export default function SignupPage() {
     setUserExists(false);
 
     try {
-      const response = await axios.post("http://localhost:8080/signup", {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/signup`, {
         username,
         password,
       });

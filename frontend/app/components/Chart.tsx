@@ -44,7 +44,7 @@ export default function BalanceExpenseChart() {
           return;
         }
 
-        const res = await axios.get("http://localhost:8080/getChartData", {
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/getChartData`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

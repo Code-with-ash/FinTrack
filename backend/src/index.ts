@@ -6,10 +6,10 @@ import cors from 'cors';
 
 const app = express();
 const pg = new PrismaClient();
-const { JWT_SECRET } = process.env;
+const { JWT_SECRET, FRONTEND_URL } = process.env;
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: FRONTEND_URL || '*', credentials: true }));
 
 app.post('/signup', async (req, res) => {
     const { username, password } = req.body;

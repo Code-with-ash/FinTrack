@@ -39,7 +39,7 @@ export default function AddTransactionForm() {
     try {
       setSubmitting(true);
       const response = await axios.post(
-        "http://localhost:8080/senddata",
+        `${process.env.NEXT_PUBLIC_API_URL}/senddata`,
         {
           type: transactionType.replace(/[^a-zA-Z ]/g, "").trim(),
           amount,

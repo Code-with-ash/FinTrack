@@ -19,7 +19,7 @@ export default function SigninPage() {
     setInvalidCredentials(false);
 
     try {
-      const response = await axios.post("http://localhost:8080/signin", {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/signin`, {
         username,
         password,
       });

@@ -41,7 +41,7 @@ export default function Dashboard() {
       }
 
       try {
-        const res = await axios.get("http://localhost:8080/getdata", {
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/getdata`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
