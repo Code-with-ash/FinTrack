@@ -3,12 +3,13 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import cors from 'cors';
+
 const app = express();
 const pg = new PrismaClient();
-const {JWT_SECRET } = process.env;
+const { JWT_SECRET } = process.env;
+
 app.use(express.json());
 app.use(cors());
-
 
 app.post('/signup', async (req, res) => {
     const { username, password } = req.body;
@@ -30,6 +31,7 @@ app.post('/signup', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+
 app.post('/signin', async (req, res) => {
     const { username, password } = req.body;
     try {
@@ -40,9 +42,12 @@ app.post('/signin', async (req, res) => {
                 if (!JWT_SECRET || typeof JWT_SECRET !== 'string') {
                     return res.status(500).send('JWT secret is not configured');
                 }
-                const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '1h' });
-                console.log(user);
-                return res.json({ token : token , username: user.username });
+                const token = jwt.sign(
+                    { id: user.id, username: user.username },
+                    JWT_SECRET,
+                    { expiresIn: '1h' }
+                );
+                return res.json({ token, username: user.username });
             }
         }
     } catch (error) {
@@ -51,7 +56,6 @@ app.post('/signin', async (req, res) => {
     }
     res.status(401).send('Invalid credentials');
 });
-
 
 async function UserMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
     const authHeader = req.headers['authorization'];
@@ -62,7 +66,7 @@ async function UserMiddleware(req: express.Request, res: express.Response, next:
     if (!token) {
         return res.status(401).send('Access denied');
     }
-`try {
+    try {
         if (!JWT_SECRET || typeof JWT_SECRET !== 'string') {
             return res.status(500).send('JWT secret is not configured');
         }
@@ -73,21 +77,19 @@ async function UserMiddleware(req: express.Request, res: express.Response, next:
     } catch (error) {
         return res.status(403).send('Invalid token');
     }
-};
+}
 
 app.post('/senddata', UserMiddleware, async (req, res) => {
     const { type, amount, description, date, category } = req.body;
-    const floatedamount = parseFloat(amount);
-    const [day, month, year] = date.split('/').map(Number);
+    const parsedAmount = parseFloat(amount);
     const dateObj = new Date(date);
-const monthName = dateObj.toLocaleString("default", { month: "long" });
-console.log(monthName); // "August"
-    
+    const monthName = dateObj.toLocaleString("default", { month: "long" });
+
     try {
         if (type === "income") {
             await pg.income.create({
                 data: {
-                    amount: floatedamount,
+                    amount: parsedAmount,
                     description,
                     date: dateObj.toString(),
                     month: monthName,
@@ -100,7 +102,7 @@ console.log(monthName); // "August"
         if (type === "expense") {
             await pg.expense.create({
                 data: {
-                    amount: floatedamount,
+                    amount: parsedAmount,
                     description,
                     category,
                     date: dateObj.toString(),
@@ -110,21 +112,15 @@ console.log(monthName); // "August"
                 }
             });
         }
-        // 🔹 After adding transaction, recalc balance for that month
+
         const [incomes, expenses] = await Promise.all([
             pg.income.findMany({
-                where: {
-                    // @ts-ignore
-                    userId: req.user.id,
-                    month: monthName
-                }
+                // @ts-ignore
+                where: { userId: req.user.id, month: monthName }
             }),
             pg.expense.findMany({
-                where: {
-                    // @ts-ignore
-                    userId: req.user.id,
-                    month: monthName
-                }
+                // @ts-ignore
+                where: { userId: req.user.id, month: monthName }
             })
         ]);
 
@@ -140,9 +136,7 @@ console.log(monthName); // "August"
                     month: monthName
                 }
             },
-            update: {
-                amount: netBalance
-            },
+            update: { amount: netBalance },
             create: {
                 // @ts-ignore
                 userId: req.user.id,
@@ -150,11 +144,11 @@ console.log(monthName); // "August"
                 amount: netBalance
             }
         });
-        // 🔹 Create a transaction record
+
         await pg.transaction.create({
             data: {
                 type,
-                amount: floatedamount,
+                amount: parsedAmount,
                 description,
                 date: dateObj.toString(),
                 // @ts-ignore
@@ -162,90 +156,72 @@ console.log(monthName); // "August"
             }
         });
 
-        res.json({ message: `${type} created successfully and balance updated`, balance: netBalance });
-
+        res.json({
+            message: `${type} created successfully`,
+            balance: netBalance
+        });
     } catch (error) {
         console.error(error);
         res.status(500).send('Internal Server Error');
     }
 });
 
-
 app.get('/getdata', UserMiddleware, async (req, res) => {
-    // Handle the data retrieval
     // @ts-ignore
     const userId = req.user.id;
-const previousMonth = new Date();
-previousMonth.setMonth(previousMonth.getMonth() - 1);
+    const previousMonth = new Date();
+    previousMonth.setMonth(previousMonth.getMonth() - 1);
 
-const currentMonth = new Date().toLocaleString("default", { month: "long" });
-const prevMonth = previousMonth.toLocaleString("default", { month: "long" });
+    const currentMonth = new Date().toLocaleString("default", { month: "long" });
+    const prevMonth = previousMonth.toLocaleString("default", { month: "long" });
 
-try {
-    // Use Promise.all for concurrent queries
-    const [
-        currentmonthbalance,
-        previousmonthbalance, 
-        currentmonthexpense,
-        previousmonthexpense
-    ] = await Promise.all([
-        pg.balance.findMany({ where: { userId, month: currentMonth } }),
-        pg.balance.findMany({ where: { userId, month: prevMonth } }),
-        pg.expense.findMany({ where: { userId, month: currentMonth } }),
-        pg.expense.findMany({ where: { userId, month: prevMonth } })
-    ]);
-   const transaction = await  pg.transaction.findMany({
-               where: {
-                   userId
-               }
-           })
+    try {
+        const [
+            currentmonthbalance,
+            previousmonthbalance,
+            currentmonthexpense,
+            previousmonthexpense
+        ] = await Promise.all([
+            pg.balance.findMany({ where: { userId, month: currentMonth } }),
+            pg.balance.findMany({ where: { userId, month: prevMonth } }),
+            pg.expense.findMany({ where: { userId, month: currentMonth } }),
+            pg.expense.findMany({ where: { userId, month: prevMonth } })
+        ]);
 
-    res.json({
-        currentmonthbalance,
-        currentmonthexpense,
-        previousmonthbalance,
-        previousmonthexpense ,
-        transaction
-    });
-} catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
-}
+        const transaction = await pg.transaction.findMany({
+            where: { userId }
+        });
+
+        res.json({
+            currentmonthbalance,
+            currentmonthexpense,
+            previousmonthbalance,
+            previousmonthexpense,
+            transaction
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 });
 
-app.get('/getChartData' , UserMiddleware , async(req , res) =>{
-   // @ts-ignore
-   const userId = req.user.id;
-   try {
-       const [incomes, expenses, balance , transactions] = await Promise.all([
-           pg.income.findMany({
-               where: {
-                   userId
-               }
-           }),
-           pg.expense.findMany({
-               where: {
-                   userId
-               }
-           }),
-           pg.balance.findMany({
-               where: {
-                   userId
-               }
-           }),
-           pg.transaction.findMany({
-               where: {
-                   userId
-               }
-           })
-       ]);
-       res.json({ incomes, expenses, balance, transactions });
-   } catch (error) {
-       console.error(error);
-       res.status(500).send('Internal Server Error');
-   }
-})
+app.get('/getChartData', UserMiddleware, async (req, res) => {
+    // @ts-ignore
+    const userId = req.user.id;
+    try {
+        const [incomes, expenses, balance, transactions] = await Promise.all([
+            pg.income.findMany({ where: { userId } }),
+            pg.expense.findMany({ where: { userId } }),
+            pg.balance.findMany({ where: { userId } }),
+            pg.transaction.findMany({ where: { userId } })
+        ]);
+        res.json({ incomes, expenses, balance, transactions });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+});
 
 app.listen(8080, () => {
-    console.log('Server is running on http://localhost:8080');
+    console.log('Server running on http://localhost:8080');
 });

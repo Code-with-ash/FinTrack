@@ -40,8 +40,7 @@ app.post('/signin', async (req, res) => {
                     return res.status(500).send('JWT secret is not configured');
                 }
                 const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '1h' });
-                console.log(user);
-                return res.json({ token: token, username: user.username });
+                return res.json({ token, username: user.username });
             }
         }
     }
@@ -73,19 +72,16 @@ async function UserMiddleware(req, res, next) {
         return res.status(403).send('Invalid token');
     }
 }
-;
 app.post('/senddata', UserMiddleware, async (req, res) => {
     const { type, amount, description, date, category } = req.body;
-    const floatedamount = parseFloat(amount);
-    const [day, month, year] = date.split('/').map(Number);
+    const parsedAmount = parseFloat(amount);
     const dateObj = new Date(date);
     const monthName = dateObj.toLocaleString("default", { month: "long" });
-    console.log(monthName); // "August"
     try {
         if (type === "income") {
             await pg.income.create({
                 data: {
-                    amount: floatedamount,
+                    amount: parsedAmount,
                     description,
                     date: dateObj.toString(),
                     month: monthName,
@@ -97,7 +93,7 @@ app.post('/senddata', UserMiddleware, async (req, res) => {
         if (type === "expense") {
             await pg.expense.create({
                 data: {
-                    amount: floatedamount,
+                    amount: parsedAmount,
                     description,
                     category,
                     date: dateObj.toString(),
@@ -107,21 +103,14 @@ app.post('/senddata', UserMiddleware, async (req, res) => {
                 }
             });
         }
-        // 🔹 After adding transaction, recalc balance for that month
         const [incomes, expenses] = await Promise.all([
             pg.income.findMany({
-                where: {
-                    // @ts-ignore
-                    userId: req.user.id,
-                    month: monthName
-                }
+                // @ts-ignore
+                where: { userId: req.user.id, month: monthName }
             }),
             pg.expense.findMany({
-                where: {
-                    // @ts-ignore
-                    userId: req.user.id,
-                    month: monthName
-                }
+                // @ts-ignore
+                where: { userId: req.user.id, month: monthName }
             })
         ]);
         const totalIncome = incomes.reduce((acc, i) => acc + i.amount, 0);
@@ -135,9 +124,7 @@ app.post('/senddata', UserMiddleware, async (req, res) => {
                     month: monthName
                 }
             },
-            update: {
-                amount: netBalance
-            },
+            update: { amount: netBalance },
             create: {
                 // @ts-ignore
                 userId: req.user.id,
@@ -145,18 +132,20 @@ app.post('/senddata', UserMiddleware, async (req, res) => {
                 amount: netBalance
             }
         });
-        // 🔹 Create a transaction record
         await pg.transaction.create({
             data: {
                 type,
-                amount: floatedamount,
+                amount: parsedAmount,
                 description,
                 date: dateObj.toString(),
                 // @ts-ignore
                 userId: req.user.id
             }
         });
-        res.json({ message: `${type} created successfully and balance updated`, balance: netBalance });
+        res.json({
+            message: `${type} created successfully`,
+            balance: netBalance
+        });
     }
     catch (error) {
         console.error(error);
@@ -164,7 +153,6 @@ app.post('/senddata', UserMiddleware, async (req, res) => {
     }
 });
 app.get('/getdata', UserMiddleware, async (req, res) => {
-    // Handle the data retrieval
     // @ts-ignore
     const userId = req.user.id;
     const previousMonth = new Date();
@@ -172,7 +160,6 @@ app.get('/getdata', UserMiddleware, async (req, res) => {
     const currentMonth = new Date().toLocaleString("default", { month: "long" });
     const prevMonth = previousMonth.toLocaleString("default", { month: "long" });
     try {
-        // Use Promise.all for concurrent queries
         const [currentmonthbalance, previousmonthbalance, currentmonthexpense, previousmonthexpense] = await Promise.all([
             pg.balance.findMany({ where: { userId, month: currentMonth } }),
             pg.balance.findMany({ where: { userId, month: prevMonth } }),
@@ -180,9 +167,7 @@ app.get('/getdata', UserMiddleware, async (req, res) => {
             pg.expense.findMany({ where: { userId, month: prevMonth } })
         ]);
         const transaction = await pg.transaction.findMany({
-            where: {
-                userId
-            }
+            where: { userId }
         });
         res.json({
             currentmonthbalance,
@@ -202,26 +187,10 @@ app.get('/getChartData', UserMiddleware, async (req, res) => {
     const userId = req.user.id;
     try {
         const [incomes, expenses, balance, transactions] = await Promise.all([
-            pg.income.findMany({
-                where: {
-                    userId
-                }
-            }),
-            pg.expense.findMany({
-                where: {
-                    userId
-                }
-            }),
-            pg.balance.findMany({
-                where: {
-                    userId
-                }
-            }),
-            pg.transaction.findMany({
-                where: {
-                    userId
-                }
-            })
+            pg.income.findMany({ where: { userId } }),
+            pg.expense.findMany({ where: { userId } }),
+            pg.balance.findMany({ where: { userId } }),
+            pg.transaction.findMany({ where: { userId } })
         ]);
         res.json({ incomes, expenses, balance, transactions });
     }
@@ -231,6 +200,6 @@ app.get('/getChartData', UserMiddleware, async (req, res) => {
     }
 });
 app.listen(8080, () => {
-    console.log('Server is running on http://localhost:8080');
+    console.log('Server running on http://localhost:8080');
 });
 //# sourceMappingURL=index.js.map

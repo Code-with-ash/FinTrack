@@ -25,3 +25,12 @@ out/
 
 # VSCode
 .vscode/
+
+# IDE workspace files
+*.code-workspace
+
+# TypeScript
+tsconfig.tsbuildinfo
+
+# Prisma
+prisma/@prisma/

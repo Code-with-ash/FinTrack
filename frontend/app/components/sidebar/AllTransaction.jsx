@@ -1,9 +1,7 @@
-import React from 'react'
+import { ArrowLeftRight } from "lucide-react";
 
 const AllTransaction = () => {
-  return (
-    <div>⇄</div>
-  )
-}
+  return <ArrowLeftRight className="w-5 h-5" />;
+};
 
-export default AllTransaction
+export default AllTransaction;
