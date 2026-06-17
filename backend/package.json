@@ -4,7 +4,8 @@
   "description": "FinTrack backend API — Express server with Prisma ORM and JWT authentication",
   "main": "index.js",
   "scripts": {
-    "dev": "npx prisma generate && tsc -b && node dist/index.js"
+    "dev": "npx prisma generate && tsc -b && node dist/index.js",
+    "postinstall": "prisma generate"
   },
   "keywords": ["fintrack", "expense-tracker", "finance", "api"],
   "author": "",
