@@ -5,9 +5,23 @@ import { PrismaClient } from '@prisma/client';
 import cors from 'cors';
 const app = express();
 const pg = new PrismaClient();
-const { JWT_SECRET } = process.env;
+const { JWT_SECRET, FRONTEND_URL } = process.env;
 app.use(express.json());
-app.use(cors());
+const allowedOrigins = FRONTEND_URL ? FRONTEND_URL.split(',').map(url => url.trim()) : [];
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin)
+            return callback(null, true);
+        if (allowedOrigins.length > 0) {
+            if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+                return callback(null, true);
+            }
+            return callback(new Error('Not allowed by CORS'));
+        }
+        return callback(null, true);
+    },
+    credentials: true
+}));
 app.post('/signup', async (req, res) => {
     const { username, password } = req.body;
     try {
@@ -199,7 +213,10 @@ app.get('/getChartData', UserMiddleware, async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
-app.listen(8080, () => {
-    console.log('Server running on http://localhost:8080');
-});
+if (!process.env.VERCEL) {
+    app.listen(8080, () => {
+        console.log('Server running on http://localhost:8080');
+    });
+}
+export default app;
 //# sourceMappingURL=index.js.map
